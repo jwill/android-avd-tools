@@ -5,11 +5,13 @@ import groovy.util.NodeList
 import groovy.util.XmlParser
 import java.io.File
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 fun main(args: Array<String>) {
     // Load SVG generated from Blender
-    val file = File("examples/0001.svg")
+    //val file = File("examples/0001.svg")
+    val file = File("examples/suzanne.svg")
 
     val svg  = XmlParser().parse(file)
 
@@ -19,11 +21,81 @@ fun main(args: Array<String>) {
     // first child is always RenderLayer_LineSet
     val renderLayer_LineSet = (svg.get("g") as NodeList)[0] as Node
 
+    // The value of renderLayer_LineSet is either a NodeList of frames
+    // frame_0001, frame_0002, ... frame_NNNN -> fills, strokes
+    // or
+    // (single frame) fills, strokes
+    when (isMultiFrameSVG(renderLayer_LineSet)) {
+        true -> {
+            val drawingData = loadFrameZeroAndAnimation(renderLayer_LineSet)
+            val json = composeAnimation(svgHeight, svgWidth, drawingData)
+            val outputFile = File(UUID.randomUUID().toString()+".shapeshifter")
+            outputFile.writeText(JsonOutput.prettyPrint(json))
+        }
 
-    val json = loadSingleFrame(svgHeight, svgWidth, renderLayer_LineSet)
-    val outputFile = File(UUID.randomUUID().toString()+".shapeshifter")
-    outputFile.writeText(JsonOutput.prettyPrint(json))
+        false -> {
+            val json = loadSingleFrame(svgHeight, svgWidth, renderLayer_LineSet)
+            val outputFile = File(UUID.randomUUID().toString()+".shapeshifter")
+            outputFile.writeText(JsonOutput.prettyPrint(json))
+        }
+    }
 }
+
+fun isMultiFrameSVG(node:Node) : Boolean {
+    val frames = (node.value() as NodeList)
+    val item = frames.first() as Node
+    return item.attribute("id") == "frame_0001"
+}
+
+fun loadFrameZeroAndAnimation(renderLayer_LineSet: Node): HashMap<String,Any> {
+    val frames = (renderLayer_LineSet.value() as NodeList)
+
+    val frame0 = frames.first() as Node
+    val frame0Fills = processPaths("fills", frame0)
+    val frame0Strokes = processPaths("strokes", frame0)
+
+    val lastFrame = frames.last() as Node
+    val lastFrameFills = processPaths("fills", lastFrame)
+    val lastFrameStrokes = processPaths("strokes", lastFrame)
+
+    // TODO() -- iterate through the paths
+    // Should I throw an error if the source and destination paths are unequal
+
+    val blocks = arrayListOf<TimelineBlock>()
+
+    frame0Fills.children.forEachIndexed{ index, path ->
+        val timelineBlock = TimelineBlock(
+                id = UUID.randomUUID().toString(),
+                layerId = (frame0Fills.children[index] as Path).id,
+                type = TimelineType.PATH.id,
+                fromValue = (frame0Fills.children[index] as Path).pathData!!,
+                toValue = (lastFrameFills.children[index] as Path).pathData!!,
+                propertyName = TimelineProperty.PATH_DATA.id
+        )
+        blocks.add(timelineBlock)
+    }
+
+    frame0Strokes.children.forEachIndexed { index, path ->
+        val timelineBlock = TimelineBlock(
+                id = UUID.randomUUID().toString(),
+                layerId = (frame0Strokes.children[index] as Path).id,
+                type = TimelineType.PATH.id,
+                fromValue = (frame0Strokes.children[index] as Path).pathData!!,
+                toValue = (lastFrameStrokes.children[index] as Path).pathData!!,
+                propertyName = TimelineProperty.PATH_DATA.id
+        )
+        blocks.add(timelineBlock)
+    }
+
+    val animation = AnimationTimeline(UUID.randomUUID().toString(),
+            blocks = blocks
+    )
+
+
+    return hashMapOf("frame0" to arrayListOf(frame0Fills, frame0Strokes),
+            "animation" to animation)
+}
+
 
 fun processPaths(id:String, node:Node) : Group {
     val paths = (node.value() as NodeList).filter {
@@ -36,7 +108,6 @@ fun processPaths(id:String, node:Node) : Group {
 
         val nodeList = ((paths.get(0) as Node).value() as NodeList)
 
-        var index = 0
         nodeList.forEachIndexed { index, it ->
             children.add(processPath(UUID.randomUUID().toString(), "$id-$index", (it as Node).attributes() as HashMap<String, String>))
         }
@@ -51,7 +122,26 @@ fun processPaths(id:String, node:Node) : Group {
     return group
 }
 
-fun processStrokes() {}
+
+fun composeAnimation(svgHeight: Int, svgWidth: Int, drawingData: HashMap<String,Any>) : String {
+
+    val layer = Layer(
+            id = UUID.randomUUID().toString(),
+            name = "vector",
+            width = svgWidth,
+            height = svgHeight,
+            children = drawingData["frame0"] as ArrayList<Group>
+    )
+    val jsonObject = mapOf(
+            "version" to 1,
+            "layers" to layersToJSON(layer),
+            timelineToJSON(drawingData["animation"] as AnimationTimeline)
+    )
+
+    val customJsonOutput = JsonGenerator.Options().excludeNulls().build()
+
+    return customJsonOutput.toJson(jsonObject)
+}
 
 fun loadSingleFrame(svgHeight:Int, svgWidth:Int, renderLayer_LineSet:Node) : String {
     val groups = arrayListOf<Group>()

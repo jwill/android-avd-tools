@@ -10,7 +10,7 @@ buildscript {
 }
 
 plugins {
-    id 'java', 'groovy'
+    id 'java'
 }
 
 group 'be.jameswilliams'

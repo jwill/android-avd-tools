@@ -107,11 +107,11 @@ data class AnimationTimeline(
 data class TimelineBlock(
         val id:String,               // could possibly be rando generated
         val layerId: String,         // id of layer to modify
-        val propertyName: TimelineProperty,
+        val propertyName: String,
         val startTime: Int = 0,
         val endTime: Int = 100,
-        val interpolator: Interpolator,
-        val type: TimelineType,      // need better name, basically data type of thing being modified
+        val interpolator: Interpolator = Interpolator.LINEAR,
+        val type: String,      // need better name, basically data type of thing being modified
         val fromValue:Any,
         val toValue:Any
 )
