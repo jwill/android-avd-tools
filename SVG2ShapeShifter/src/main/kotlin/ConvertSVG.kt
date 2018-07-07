@@ -11,7 +11,7 @@ import kotlin.collections.ArrayList
 fun main(args: Array<String>) {
     // Load SVG generated from Blender
     //val file = File("examples/0001.svg")
-    val file = File("examples/suzanne.svg")
+    val file = File("examples/multiple-shape-keys.svg")
 
     val svg  = XmlParser().parse(file)
 
@@ -44,48 +44,128 @@ fun main(args: Array<String>) {
 fun isMultiFrameSVG(node:Node) : Boolean {
     val frames = (node.value() as NodeList)
     val item = frames.first() as Node
-    return item.attribute("id") == "frame_0001"
+    return frames.size > 1
+    //return item.attribute("id") == "frame_0001"
 }
 
 fun loadFrameZeroAndAnimation(renderLayer_LineSet: Node): HashMap<String,Any> {
     val frames = (renderLayer_LineSet.value() as NodeList)
 
-    val frame0 = frames.first() as Node
-    val frame0Fills = processPaths("fills", frame0)
-    val frame0Strokes = processPaths("strokes", frame0)
-
-    val lastFrame = frames.last() as Node
-    val lastFrameFills = processPaths("fills", lastFrame)
-    val lastFrameStrokes = processPaths("strokes", lastFrame)
-
     // TODO() -- iterate through the paths
     // Should I throw an error if the source and destination paths are unequal
 
+    val processedFrames = arrayListOf<Map<String, Group>>()
+    frames.forEachIndexed { index, node ->
+        val fills = processPaths("fills", node as Node)
+        val strokes = processPaths("strokes", node as Node)
+        processedFrames.add(mapOf(
+          "fills" to fills, "strokes" to strokes
+        ))
+    }
+
+    var currentTime = 0
+
+
     val blocks = arrayListOf<TimelineBlock>()
+    val frame0 = processedFrames[0]
+    val frame0Fills = frame0["fills"]
+    val frame0Strokes = frame0["strokes"]
+    for (index in 0 until processedFrames.size-1 step 5) {
+    //processedFrames.forEachIndexed { index, map ->
+        val currentFrame = processedFrames[index]
+        val currentFrameFills = currentFrame["fills"]
+        val currentFrameStrokes = currentFrame["strokes"]
 
-    frame0Fills.children.forEachIndexed{ index, path ->
-        val timelineBlock = TimelineBlock(
-                id = UUID.randomUUID().toString(),
-                layerId = (frame0Fills.children[index] as Path).id,
-                type = TimelineType.PATH.id,
-                fromValue = (frame0Fills.children[index] as Path).pathData!!,
-                toValue = (lastFrameFills.children[index] as Path).pathData!!,
-                propertyName = TimelineProperty.PATH_DATA.id
-        )
-        blocks.add(timelineBlock)
+        val nextFrame = processedFrames[index + 5]
+        if (nextFrame != null) {
+            val nextFrameFills = nextFrame["fills"]
+            val nextFrameStrokes = nextFrame["strokes"]
+
+            for (i in 0 until frame0Fills?.children!!.size) {
+                val timelineBlock = TimelineBlock(
+                        id = UUID.randomUUID().toString(),
+                        layerId = (frame0Fills.children[i] as Path).id,           // never changes
+                        type = TimelineType.PATH.id,
+                        fromValue = (currentFrameFills!!.children[i] as Path).pathData!!,   // changes per frame
+                        toValue = (nextFrameFills!!.children[i] as Path).pathData!!,
+                        propertyName = TimelineProperty.PATH_DATA.id,
+
+                        startTime = currentTime,
+                        endTime = currentTime + 20
+                )
+                blocks.add(timelineBlock)
+
+                // check for possible color animation block
+                val currentColor = (currentFrameFills.children[i] as Path).fillColor
+                val currentAlpha = (currentFrameFills.children[i] as Path).fillAlpha
+                val nextFrameColor = (nextFrameFills.children[i] as Path).fillColor
+                val nextFrameAlpha = (nextFrameFills.children[i] as Path).fillAlpha
+
+                if (currentColor != nextFrameColor) {
+                    val colorTimelineBlock = TimelineBlock(
+                            id = UUID.randomUUID().toString(),
+                            layerId = (frame0Fills.children[i] as Path).id,
+                            type =  TimelineType.COLOR.id,
+                            propertyName = TimelineProperty.FILL_COLOR.id,
+
+                            fromValue = currentColor!!,
+                            toValue = nextFrameColor!!,
+                            startTime = currentTime,
+                            endTime = currentTime + 20
+                    )
+                    blocks.add(colorTimelineBlock)
+                }
+                if (currentAlpha != nextFrameAlpha){
+                    // TODO
+                }
+
+
+            }
+
+            for (j in 0 until frame0Strokes?.children!!.size) {
+                val timelineBlock = TimelineBlock(
+                        id = UUID.randomUUID().toString(),
+                        layerId = (frame0Strokes.children[j] as Path).id,           // never changes
+                        type = TimelineType.PATH.id,
+                        fromValue = (currentFrameStrokes!!.children[j] as Path).pathData!!,   // changes per frame
+                        toValue = (nextFrameStrokes!!.children[j] as Path).pathData!!,
+                        propertyName = TimelineProperty.PATH_DATA.id,
+
+                        startTime = currentTime,
+                        endTime = currentTime + 20
+                )
+                blocks.add(timelineBlock)
+
+                // check for possible color animation block
+                val currentColor = (currentFrameStrokes.children[j] as Path).strokeColor
+                val currentAlpha = (currentFrameStrokes.children[j] as Path).strokeAlpha
+                val nextFrameColor = (nextFrameStrokes.children[j] as Path).strokeColor
+                val nextFrameAlpha = (nextFrameStrokes.children[j] as Path).strokeAlpha
+                if (currentColor != nextFrameColor) {
+                    val colorTimelineBlock = TimelineBlock(
+                            id = UUID.randomUUID().toString(),
+                            layerId = (frame0Strokes.children[j] as Path).id,
+                            type =  TimelineType.COLOR.id,
+                            propertyName = TimelineProperty.STROKE_COLOR.id,
+
+                            fromValue = currentColor!!,
+                            toValue = nextFrameColor!!,
+                            startTime = currentTime,
+                            endTime = currentTime + 20
+                    )
+                    blocks.add(colorTimelineBlock)
+                }
+
+                if (currentAlpha != nextFrameAlpha){
+                    // TODO
+                }
+            }
+            currentTime += 20
+        }
     }
 
-    frame0Strokes.children.forEachIndexed { index, path ->
-        val timelineBlock = TimelineBlock(
-                id = UUID.randomUUID().toString(),
-                layerId = (frame0Strokes.children[index] as Path).id,
-                type = TimelineType.PATH.id,
-                fromValue = (frame0Strokes.children[index] as Path).pathData!!,
-                toValue = (lastFrameStrokes.children[index] as Path).pathData!!,
-                propertyName = TimelineProperty.PATH_DATA.id
-        )
-        blocks.add(timelineBlock)
-    }
+
+
 
     val animation = AnimationTimeline(UUID.randomUUID().toString(),
             blocks = blocks
@@ -256,7 +336,7 @@ fun processPath(id:String, name: String, props:HashMap<String,String>) : PathPri
             trimPathOffset = null
     )
 
-    println(JsonOutput.toJson(path))
+    //println(JsonOutput.toJson(path))
     return path
 }
 
