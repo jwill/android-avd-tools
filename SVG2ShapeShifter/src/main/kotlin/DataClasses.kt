@@ -118,7 +118,8 @@ data class TimelineBlock(
 
 enum class TimelineType(val id:String) {
     PATH("path"),
-    NUMBER("number")
+    NUMBER("number"),
+    COLOR("color")
 }
 
 enum class TimelineProperty(val id:String) {
