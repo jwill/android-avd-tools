@@ -22,8 +22,8 @@ fun m(args: Array<String>) {
 
 fun main(args: Array<String>) {
     // Load SVG generated from Blender
-    //val file = File("examples/0001.svg")
-    val file = File("examples/shape-keys-color-animation.svg")
+    val file = File("examples/monkey.svg")
+    val outputFile = File(file.name.removeSuffix(".svg") + ".shapeshifter")
 
     val svg  = XmlParser().parse(file)
 
@@ -41,13 +41,11 @@ fun main(args: Array<String>) {
         true -> {
             val drawingData = loadFrameZeroAndAnimation(renderLayer_LineSet)
             val json = composeAnimation(svgHeight, svgWidth, drawingData)
-            val outputFile = File(UUID.randomUUID().toString()+".shapeshifter")
             outputFile.writeText(JsonOutput.prettyPrint(json))
         }
 
         false -> {
             val json = loadSingleFrame(svgHeight, svgWidth, renderLayer_LineSet)
-            val outputFile = File(UUID.randomUUID().toString()+".shapeshifter")
             outputFile.writeText(JsonOutput.prettyPrint(json))
         }
     }
@@ -55,7 +53,16 @@ fun main(args: Array<String>) {
 
 fun isMultiFrameSVG(node:Node) : Boolean {
     val frames = (node.value() as NodeList)
-    return frames.size > 1
+    // Node.value will either be a group of fills and a group of paths
+    // or keyframe(s)
+
+    // If the frame is
+
+    val keyFrames = frames.filter {
+        val node = it as Node
+        val attributesMap = node.attributes()
+        attributesMap["id"].toString().startsWith("frame_") }
+    return keyFrames.size > 1
 }
 
 fun loadFrameZeroAndAnimation(renderLayer_LineSet: Node): HashMap<String,Any> {
@@ -77,12 +84,13 @@ fun loadFrameZeroAndAnimation(renderLayer_LineSet: Node): HashMap<String,Any> {
     val frame0 = processedFrames[0]
     val frame0Fills = frame0["fills"]
     val frame0Strokes = frame0["strokes"]
-    for (index in 0 until processedFrames.size-1 step 5) {
+    val frameInterval = 5
+    for (index in 0 until processedFrames.size-1 step frameInterval) {
         val currentFrame = processedFrames[index]
         val currentFrameFills = currentFrame["fills"]
         val currentFrameStrokes = currentFrame["strokes"]
 
-        val nextFrame = processedFrames[index + 5]
+        val nextFrame = processedFrames.getOrNull(index + frameInterval)
         if (nextFrame != null) {
             val nextFrameFills = nextFrame["fills"]
             val nextFrameStrokes = nextFrame["strokes"]
