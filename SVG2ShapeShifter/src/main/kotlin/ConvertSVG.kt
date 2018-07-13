@@ -12,15 +12,15 @@ import kotlin.collections.ArrayList
 
 fun main(args: Array<String>) {
     // Call the converter from IDEA
-    //ConvertSVG().renderFile("examples/text.svg")
+    ConvertSVG().renderFile("examples/0001-0031.svg")
 
     // Use from the commandline
-    ConvertSVG(args)
+    //ConvertSVG(args)
 }
 
 class ConvertSVG() {
     var frameInterval = 5
-    var timeInterval = 20
+    var timeInterval = 50
 
     constructor(args:Array<String>): this() {
         val parser = DefaultParser()
@@ -84,10 +84,6 @@ class ConvertSVG() {
         }
     }
 
-
-
-
-
     fun isMultiFrameSVG(node: Node): Boolean {
         val frames = (node.value() as NodeList)
         // Node.value will either be a group of fills and a group of paths
@@ -140,7 +136,7 @@ class ConvertSVG() {
                 for (j in 0 until frame0Strokes?.children!!.size) {
                     parseGroupForAnimation(frame0Strokes, j, currentFrameStrokes, nextFrameStrokes, currentTime, blocks, isFill = false)
                 }
-                currentTime += 20
+                currentTime += timeInterval
             }
         }
 
@@ -270,6 +266,7 @@ class ConvertSVG() {
         )
         val jsonObject = mapOf(
                 "version" to 1,
+                "generatedby" to "GH:/jwill/android-avd-tools",
                 "layers" to layersToJSON(layer),
                 timelineToJSON(drawingData["animation"] as AnimationTimeline)
         )
