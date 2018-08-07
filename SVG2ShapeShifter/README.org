@@ -1,0 +1,24 @@
+* SVG2ShapeShifter
+
+Converts SVG files created by Blender's Freestyle SVG add-on to ShapeShifter format. 
+
+Supports:
+- SVG paths
+- Path animation
+- Stroke/Fill Colors
+- Stroke/Fill Animation
+
+Usage:
+~java -jar SVG2ShapeShifter-<version>.jar <options>~
+
+|Property|Description|
+| -f,--file <arg>                | File to convert|
+| -frame,--frameInterval <arg>   | Sets the number of frames to skip between|
+|                                | keyframes when exporting.|
+|                                | Default: 5|
+| -h,--help                      | Print this help message|
+| -time,--timeInterval <arg>     | Sets the time interval between keyframes|
+|                                | for animations [in 1/100th of seconds]|
+|                                |Default: 20|
+
+Output filename is always the input file with a ~.shapeshifter~ extension.
