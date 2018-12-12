@@ -144,6 +144,7 @@ class ConvertSVG() {
         val animation = AnimationTimeline(UUID.randomUUID().toString(),
                 blocks = blocks
         )
+        animation.fixDuration();
 
         return hashMapOf("frame0" to arrayListOf(frame0Fills, frame0Strokes),
                 "animation" to animation)

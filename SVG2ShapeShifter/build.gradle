@@ -41,3 +41,15 @@ compileKotlin {
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
+
+jar {
+    manifest {
+        attributes(
+                'Class-Path': configurations.compileClasspath.files.collect {"$it.name"}.join(' '),
+                'Main-Class': 'ConvertSVGKt'
+        )
+    }
+    from {
+        configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
