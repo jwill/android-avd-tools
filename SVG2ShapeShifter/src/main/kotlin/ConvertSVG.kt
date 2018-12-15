@@ -12,10 +12,10 @@ import kotlin.collections.ArrayList
 
 fun main(args: Array<String>) {
     // Call the converter from IDEA
-    ConvertSVG().renderFile("examples/0001-0041.svg")
+    //ConvertSVG().renderFile("examples/example.svg")
 
     // Use from the commandline
-    //ConvertSVG(args)
+    ConvertSVG(args)
 }
 
 class ConvertSVG() {
@@ -57,6 +57,11 @@ class ConvertSVG() {
         // Load SVG generated from Blender
         val file = File(filename)
         val outputFile = File(file.name.removeSuffix(".svg") + ".shapeshifter")
+
+        if (!file.exists()) {
+            println("File ${file.name} doesn't exist")
+            System.exit(1)
+        }
 
         val svg = XmlParser().parse(file)
 
@@ -229,7 +234,7 @@ class ConvertSVG() {
 
             }
         } catch (ex:Exception) {
-            println(ex.stackTrace)
+            println(ex.message)
         }
     }
 

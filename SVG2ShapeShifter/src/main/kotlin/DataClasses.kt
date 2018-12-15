@@ -104,6 +104,7 @@ data class AnimationTimeline(
         val blocks:List<TimelineBlock> = emptyList()
 ) {
     fun fixDuration() {
+        println("fixing duration")
         duration = blocks.map { it.endTime }.max()!!
     }
 }
