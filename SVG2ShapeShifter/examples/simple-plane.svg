@@ -1,8 +1,0 @@
-<?xml version='1.0' encoding='ascii'?>
-<svg xmlns="http://www.w3.org/2000/svg" height="540" version="1.1" width="960">
-    <g id="RenderLayer_LineSet" inkscape:groupmode="lineset" inkscape:label="RenderLayer_LineSet" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
-        <g id="strokes" inkscape:groupmode="layer" inkscape:label="strokes" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
-            <path d="M 58,75 L181,0 L0,140 L-181,0 L 0,-140 Z" stroke-width="5" stroke="#000000" fill="#FFDD00"/>
-        </g>
-    </g>
-</svg>
