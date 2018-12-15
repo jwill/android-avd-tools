@@ -12,10 +12,10 @@ import kotlin.collections.ArrayList
 
 fun main(args: Array<String>) {
     // Call the converter from IDEA
-    ConvertSVG().renderFile("examples/0001-0031.svg")
+    //ConvertSVG().renderFile("examples/example.svg")
 
     // Use from the commandline
-    //ConvertSVG(args)
+    ConvertSVG(args)
 }
 
 class ConvertSVG() {
@@ -57,6 +57,11 @@ class ConvertSVG() {
         // Load SVG generated from Blender
         val file = File(filename)
         val outputFile = File(file.name.removeSuffix(".svg") + ".shapeshifter")
+
+        if (!file.exists()) {
+            println("File ${file.name} doesn't exist")
+            System.exit(1)
+        }
 
         val svg = XmlParser().parse(file)
 
@@ -144,6 +149,7 @@ class ConvertSVG() {
         val animation = AnimationTimeline(UUID.randomUUID().toString(),
                 blocks = blocks
         )
+        animation.fixDuration();
 
         return hashMapOf("frame0" to arrayListOf(frame0Fills, frame0Strokes),
                 "animation" to animation)
@@ -162,69 +168,73 @@ class ConvertSVG() {
         var colorProperty: TimelineProperty = TimelineProperty.FILL_COLOR
         var alphaProperty: TimelineProperty = TimelineProperty.FILL_ALPHA
 
-        val timelineBlock = TimelineBlock(
-                id = UUID.randomUUID().toString(),
-                layerId = (frameFillOrStrokes.children[i] as Path).id,           // never changes
-                type = TimelineType.PATH.id,
-                fromValue = (currentFrameGroup!!.children[i] as Path).pathData!!,   // changes per frame
-                toValue = (nextFrameGroup!!.children[i] as Path).pathData!!,
-                propertyName = TimelineProperty.PATH_DATA.id,
-
-                startTime = currentTime,
-                endTime = currentTime + timeInterval
-        )
-        blocks.add(timelineBlock)
-
-
-
-        when (isFill) {
-            true -> {
-                currentColor = (currentFrameGroup.children[i] as Path).fillColor
-                currentAlpha = (currentFrameGroup.children[i] as Path).fillAlpha
-
-                nextFrameColor = (nextFrameGroup.children[i] as Path).fillColor
-                nextFrameAlpha = (nextFrameGroup.children[i] as Path).fillAlpha
-            }
-            false -> {
-                currentColor = (currentFrameGroup.children[i] as Path).strokeColor
-                currentAlpha = (currentFrameGroup.children[i] as Path).strokeAlpha
-
-                nextFrameColor = (nextFrameGroup.children[i] as Path).strokeColor
-                nextFrameAlpha = (nextFrameGroup.children[i] as Path).strokeAlpha
-
-                colorProperty = TimelineProperty.STROKE_COLOR
-                alphaProperty = TimelineProperty.STROKE_ALPHA
-            }
-        }
-
-        if (currentColor != nextFrameColor) {
-            val colorTimelineBlock = TimelineBlock(
+        try {
+            val timelineBlock = TimelineBlock(
                     id = UUID.randomUUID().toString(),
-                    layerId = (frameFillOrStrokes.children[i] as Path).id,
-                    type = TimelineType.COLOR.id,
-                    propertyName = colorProperty.id,
+                    layerId = (frameFillOrStrokes.children[i] as Path).id,           // never changes
+                    type = TimelineType.PATH.id,
+                    fromValue = (currentFrameGroup!!.children[i] as Path).pathData!!,   // changes per frame
+                    toValue = (nextFrameGroup!!.children[i] as Path).pathData!!,
+                    propertyName = TimelineProperty.PATH_DATA.id,
 
-                    fromValue = currentColor!!,
-                    toValue = nextFrameColor!!,
                     startTime = currentTime,
                     endTime = currentTime + timeInterval
             )
-            blocks.add(colorTimelineBlock)
-        }
-        if (currentAlpha != nextFrameAlpha) {
-            val colorTimelineBlock = TimelineBlock(
-                    id = UUID.randomUUID().toString(),
-                    layerId = (frameFillOrStrokes.children[i] as Path).id,
-                    type = TimelineType.NUMBER.id,
-                    propertyName = alphaProperty.id,
+            blocks.add(timelineBlock)
 
-                    fromValue = currentAlpha!!,
-                    toValue = nextFrameAlpha!!,
-                    startTime = currentTime,
-                    endTime = currentTime + timeInterval
-            )
-            blocks.add(colorTimelineBlock)
 
+
+            when (isFill) {
+                true -> {
+                    currentColor = (currentFrameGroup.children[i] as Path).fillColor
+                    currentAlpha = (currentFrameGroup.children[i] as Path).fillAlpha
+
+                    nextFrameColor = (nextFrameGroup.children[i] as Path).fillColor
+                    nextFrameAlpha = (nextFrameGroup.children[i] as Path).fillAlpha
+                }
+                false -> {
+                    currentColor = (currentFrameGroup.children[i] as Path).strokeColor
+                    currentAlpha = (currentFrameGroup.children[i] as Path).strokeAlpha
+
+                    nextFrameColor = (nextFrameGroup.children[i] as Path).strokeColor
+                    nextFrameAlpha = (nextFrameGroup.children[i] as Path).strokeAlpha
+
+                    colorProperty = TimelineProperty.STROKE_COLOR
+                    alphaProperty = TimelineProperty.STROKE_ALPHA
+                }
+            }
+
+            if (currentColor != nextFrameColor) {
+                val colorTimelineBlock = TimelineBlock(
+                        id = UUID.randomUUID().toString(),
+                        layerId = (frameFillOrStrokes.children[i] as Path).id,
+                        type = TimelineType.COLOR.id,
+                        propertyName = colorProperty.id,
+
+                        fromValue = currentColor!!,
+                        toValue = nextFrameColor!!,
+                        startTime = currentTime,
+                        endTime = currentTime + timeInterval
+                )
+                blocks.add(colorTimelineBlock)
+            }
+            if (currentAlpha != nextFrameAlpha) {
+                val colorTimelineBlock = TimelineBlock(
+                        id = UUID.randomUUID().toString(),
+                        layerId = (frameFillOrStrokes.children[i] as Path).id,
+                        type = TimelineType.NUMBER.id,
+                        propertyName = alphaProperty.id,
+
+                        fromValue = currentAlpha!!,
+                        toValue = nextFrameAlpha!!,
+                        startTime = currentTime,
+                        endTime = currentTime + timeInterval
+                )
+                blocks.add(colorTimelineBlock)
+
+            }
+        } catch (ex:Exception) {
+            println(ex.message)
         }
     }
 

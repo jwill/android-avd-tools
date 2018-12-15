@@ -100,9 +100,14 @@ data class Path(
 data class AnimationTimeline(
         val id: String,
         val name:String = "anim",
-        val duration:Int = 300,
+        var duration:Int = 300,
         val blocks:List<TimelineBlock> = emptyList()
-)
+) {
+    fun fixDuration() {
+        println("fixing duration")
+        duration = blocks.map { it.endTime }.max()!!
+    }
+}
 
 data class TimelineBlock(
         val id:String,               // could possibly be rando generated
