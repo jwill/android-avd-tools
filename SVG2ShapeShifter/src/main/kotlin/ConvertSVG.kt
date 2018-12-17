@@ -169,18 +169,24 @@ class ConvertSVG() {
         var alphaProperty: TimelineProperty = TimelineProperty.FILL_ALPHA
 
         try {
-            val timelineBlock = TimelineBlock(
-                    id = UUID.randomUUID().toString(),
-                    layerId = (frameFillOrStrokes.children[i] as Path).id,           // never changes
-                    type = TimelineType.PATH.id,
-                    fromValue = (currentFrameGroup!!.children[i] as Path).pathData!!,   // changes per frame
-                    toValue = (nextFrameGroup!!.children[i] as Path).pathData!!,
-                    propertyName = TimelineProperty.PATH_DATA.id,
+            // Check path data
+            val currentPath = (currentFrameGroup!!.children[i] as Path).pathData!!
+            val nextPath = (nextFrameGroup!!.children[i] as Path).pathData!!
 
-                    startTime = currentTime,
-                    endTime = currentTime + timeInterval
-            )
-            blocks.add(timelineBlock)
+            if (currentPath != nextPath) {
+                val timelineBlock = TimelineBlock(
+                        id = UUID.randomUUID().toString(),
+                        layerId = (frameFillOrStrokes.children[i] as Path).id,           // never changes
+                        type = TimelineType.PATH.id,
+                        fromValue = currentPath,   // changes per frame
+                        toValue = nextPath,
+                        propertyName = TimelineProperty.PATH_DATA.id,
+
+                        startTime = currentTime,
+                        endTime = currentTime + timeInterval
+                )
+                blocks.add(timelineBlock)
+            }
 
 
 
