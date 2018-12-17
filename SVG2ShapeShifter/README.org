@@ -19,6 +19,13 @@ Blender speaks SVG and so does ShapeShifter so you can create in Blender and exp
 
 With that solved, it cut down my time needed manually create paths in Shape Shifter. I only needed to animate them. [[https://medium.com/@ecspike/creating-animatedvectordrawables-with-shape-shifter-part-ii-4142ba1ad74b][A simple eye blink animation]] took 10 timeline events to create in Shape Shifter. Doable but tedious as animations grow more complex. That exposed problem two. The number of timeline events needed to create something manually in Shape Shifter often increases greater than linear scale and pretty hard to adjust if one change had to cascade. The second major revision was parsing an animated SVG from Blender into ShapeShifter format.
 
+
+** Examples
+[[./art/blender-hello-1280.gif]]
+
+[[./art/shapeshifter-hello-1280.gif]]
+
+
 ** How does it work ?
 
 Blender's FreeStyle plugin renders using Z-depth, 3D mesh data, and other variables to draw lines and edges. It can simulate various cartoon styles as well as technical blue print illustration. That line and edge data for all meshes and transformations is converted to path data as a lowest common denominator and exported to SVG. Color data is handled as well.
@@ -49,7 +56,7 @@ This is very experimental. Moving the camera in your scene can cause some paths 
 ** Usage
 
 Usage:
-SVG2ShapeShifter<.bat/sh> <options>~
+=SVG2ShapeShifter<.bat/sh> <options>=
 
 | Property                     | Description                               |
 | -f,--file <arg>              | File to convert                           |
