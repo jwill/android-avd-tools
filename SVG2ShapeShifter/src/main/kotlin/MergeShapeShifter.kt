@@ -22,8 +22,10 @@ class MergeShapeShifter() {
     var frameInterval = 5
     var timeInterval = 50
 
+    var startId = 200
+
     fun merge(filenames: Array<String>) {
-        val outputFile = File("combined-clean.shapeshifter")
+        val outputFile = File("combined-clean-55.shapeshifter")
 
         val groups = arrayListOf<Group>()
         val animationBlocks = arrayListOf<Any>()
@@ -32,23 +34,25 @@ class MergeShapeShifter() {
         var height: Int = -1
         var duration: Int = -1
         for (i in filenames) {
-
-
             val file = File(i)
             val f = JsonSlurper().parse(file)
             val json: Map<Any, Any> = f as Map<Any, Any>
             val layers = json["layers"] as Map<Any, Any>
-            val vectorLayer = layers["vectorLayer"] as Map<Any, Any>
+            // parse vector layer
+            val vectorLayer = Layer.parse(layers["vectorLayer"] as Map<Any, Any>)
 
             if (width == -1) {
-                width = vectorLayer["width"] as Int
-                height = vectorLayer["height"] as Int
+                width = vectorLayer.width
+                height = vectorLayer.height
             }
 
-            // Grab groups from each file
-            val groupId = vectorLayer["id"].toString()
+
+            // Use filename as group name
+            val groupId = vectorLayer.id
             val groupName = file.name.removeSuffix(".shapeshifter").replace("-","_")
-            val vectorChildren = vectorLayer["children"] as ArrayList<*>
+
+
+            val vectorChildren = vectorLayer.children
             println(vectorChildren.size)
 
 
@@ -64,19 +68,14 @@ class MergeShapeShifter() {
 
             // Grab the animations
             val timeline = json["timeline"] as Map<*, *>
-            val animation = timeline["animation"] as Map<*, *>
-            if (duration == -1) {
-                duration = animation["duration"] as Int
-            }
-            val layerAnimationBlocks = animation["blocks"] as ArrayList<*>
+            val animation = AnimationTimeline.parse(timeline["animation"] as Map<*, *>)
 
-            for (block in layerAnimationBlocks) {
-                animationBlocks.add(TimelineBlock.parseBlock(block as Map<*, *>))
-            }
+            animationBlocks.addAll(animation.blocks)
 
-            //val j = JsonOutput.toJson(vectorLayer)
-            //println(JsonOutput.prettyPrint(j))
         }
+
+        // walk tree and reassign ids
+
         val layer = Layer(
                 id = UUID.randomUUID().toString(),
                 name = "vector",
@@ -86,10 +85,11 @@ class MergeShapeShifter() {
         )
 
         val animationTimeline = AnimationTimeline(
-                id = "45",      // Dummy id AFAIK
+                id = "45",      // Dummy id --- probably need to fix this later
                 duration = duration,
                 blocks = animationBlocks as List<TimelineBlock>
         )
+        animationTimeline.fixDuration()
 
         val jsonObject = mapOf(
                 "version" to 1,
@@ -107,6 +107,10 @@ class MergeShapeShifter() {
         val o = customJsonOutput.toJson(jsonObject)
         outputFile.writeText(JsonOutput.prettyPrint(o))
 
+    }
+
+    fun nextId() : Int {
+        return startId++
     }
 
     constructor(args: Array<String>) : this() {
