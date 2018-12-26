@@ -1,26 +1,74 @@
 class Layer(
-        val id:String,
+        var id:String,
         val name:String,
         val type: String = "vector",
         val width:Int,
         val height:Int,
         val alpha:Double = 1.0,
-        val children:List<Any> = emptyList() // Path or group
-)
+        val children:List<PathPrimitive> = emptyList() // Path or group
+) {
+    companion object {
+        fun parse(map: Map<*, *>) : Layer {
+            //parse children
+            val children = arrayListOf<PathPrimitive>()
+            val rawChildren = map["children"] as ArrayList<Map<*,*>>
+            parseChildren(rawChildren, children)
+
+            return Layer(
+                    id = map["id"] as String,
+                    name = map["name"] as String,
+                    width = map["width"] as Int,
+                    height = map["height"] as Int,
+                    children = children
+            )
+        }
+    }
+}
+
+fun parseChildren(rawChildren:ArrayList<Map<*,*>>, childObjectList: ArrayList<PathPrimitive>) {
+    for (child:Map<*,*> in rawChildren) {
+        when (child["type"].toString()) {
+            "group" -> {
+                val group = Group.parse(child)
+                childObjectList.add(group)
+            }
+            "path" -> {
+                val path = Path.parse(child)
+                childObjectList.add(path)
+            }
+        }
+
+    }
+}
 
 class Group(
-        val id:String,
-        val name:String,
-        val rotation:Int = 0,
-        val scaleX:Double = 1.0,
-        val scaleY:Double = 1.0,
-        val pivotX:Int = 0,
-        val pivotY:Int = 0,
-        val translateX:Int = 0,
-        val translateY:Int = 0,
+        override var id:String,
+        override val name:String,
+        //val rotation:Int = 0,
+        //val scaleX:Double = 1.0,
+        //val scaleY:Double = 1.0,
+        //val pivotX:Int = 0,
+        //val pivotY:Int = 0,
+        //val translateX:Int = 0,
+        //val translateY:Int = 0,
         val children: List<PathPrimitive>,
-        val type: String = "group"
-)
+        override val type: String = "group"
+) : PathPrimitive {
+    companion object {
+        fun parse(map:Map<*,*>) : Group {
+            //parse children
+            val children = arrayListOf<PathPrimitive>()
+            val rawChildren = map["children"] as ArrayList<Map<*,*>>
+            parseChildren(rawChildren, children)
+
+            return Group(
+                    id = map["id"].toString(),
+                    name = map["name"].toString(),
+                    children = children
+            )
+        }
+    }
+}
 
 
 enum class StrokeLineCap(val id:String) {
@@ -60,45 +108,71 @@ enum class FillType(val id:String) {
     }
 }
 
-open class PathPrimitive {
-    open val type:String = ""
+interface PathPrimitive {
+    var id:String
+    val name:String
+    val type:String
 }
 
 data class Mask(
-        val id:String,
-        val name:String,
+        override var id:String,
+        override val name:String,
         val pathData: String,
 
         override val type: String = "mask"
-) : PathPrimitive()
+) : PathPrimitive
 
 data class Path(
-        val id:String,
-        val name: String,
+        override var id:String,
+        override val name: String,
         val pathData: String?,
         val fillColor: String?,
-        val fillAlpha:Double?,
+        val fillAlpha:Number?,
 
         val strokeColor: String?,
-        val strokeWidth: Double?,
-        val strokeAlpha: Double?,
+        val strokeWidth: Number? ,
+        val strokeAlpha: Number?,
 
         val strokeLineCap: String?,
         val strokeLineJoin: String?,
         val strokeMitterLimit: Int?,
-        val trimPathStart: Double?,
-        val trimPathEnd: Double?,
-        val trimPathOffset: Double?,
+        val trimPathStart: Number?,
+        val trimPathEnd: Number?,
+        val trimPathOffset: Number?,
         val fillType: String?,
 
         override val type: String = "path"
 
-) : PathPrimitive()
+) : PathPrimitive {
+    companion object {
+        fun parse(map: Map<*, *>) : Path {
+            return Path(
+                    id = map["id"] as String,
+                    name = map["name"] as String,
+                    pathData = map["pathData"] as String?,
+                    fillColor = map["fillColor"] as String?,
+                    fillAlpha = map["fillAlpha"] as Number?,
+
+                    strokeColor = map["strokeColor"] as String?,
+                    strokeWidth = map["strokeWidth"] as Number?,
+                    strokeAlpha = map["strokeAlpha"] as Number?,
+
+                    strokeLineCap = map["strokeLineCap"] as String?,
+                    strokeLineJoin = map["strokeLineJoin"] as String?,
+                    strokeMitterLimit = map["strokeMitterLimit"] as Int?,
+                    trimPathStart = map["trimPathStart"] as Number?,
+                    trimPathEnd = map["trimPathEnd"] as Number?,
+                    trimPathOffset = map["trimPathOffset"] as Number?,
+                    fillType = map["fillType"] as String?
+            )
+        }
+    }
+}
 
 
 
 data class AnimationTimeline(
-        val id: String,
+        var id: String,
         val name:String = "anim",
         var duration:Int = 300,
         val blocks:List<TimelineBlock> = emptyList()
@@ -106,12 +180,30 @@ data class AnimationTimeline(
     fun fixDuration() {
         println("fixing duration")
         duration = blocks.map { it.endTime }.max()!!
+        println(blocks.size)
+    }
+
+    companion object {
+        fun parse(map: Map<*,*>) : AnimationTimeline{
+            val blocks = arrayListOf<TimelineBlock>()
+            val rawBlocks = map["blocks"] as ArrayList<Map<*,*>>
+            for (block in rawBlocks) {
+                blocks.add(TimelineBlock.parse(block))
+            }
+
+            return AnimationTimeline(
+                    id = map["id"].toString(),
+                    name = map["name"].toString(),
+                    duration = map["duration"] as Int,
+                    blocks = blocks
+            )
+        }
     }
 }
 
 data class TimelineBlock(
-        val id:String,               // could possibly be rando generated
-        val layerId: String,         // id of layer to modify
+        var id:String,               // could possibly be rando generated
+        var layerId: String,         // id of layer to modify
         val propertyName: String,
         val startTime: Int = 0,
         val endTime: Int = 100,
@@ -119,7 +211,22 @@ data class TimelineBlock(
         val type: String,      // need better name, basically data type of thing being modified
         val fromValue:Any,
         val toValue:Any
-)
+) {
+    companion object {
+        fun parse(map: Map<*,*>) : TimelineBlock{
+            return TimelineBlock(
+                    id = map["id"].toString(),
+                    layerId = map["layerId"].toString(),
+                    propertyName = map["propertyName"].toString(),
+                    startTime = map["startTime"] as Int,
+                    endTime = map["endTime"] as Int,
+                    interpolator = Interpolator.LINEAR,
+                    type = map["type"].toString(),
+                    fromValue = map["fromValue"]!!,
+                    toValue = map["toValue"]!!)
+        }
+    }
+}
 
 enum class TimelineType(val id:String) {
     PATH("path"),

@@ -22,7 +22,8 @@ class ConvertSVG() {
     var frameInterval = 5
     var timeInterval = 50
 
-    constructor(args:Array<String>): this() {
+
+    constructor(args: Array<String>) : this() {
         val parser = DefaultParser()
         val options = Options()
         with(options) {
@@ -117,7 +118,15 @@ class ConvertSVG() {
         }
 
         var currentTime = 0
-
+        val sanitizeFrameId = {frame:Node ->
+            val id = frame.attribute("id").toString()
+            val intString:String = id.removePrefix("frame_")
+             Integer.parseInt(intString)
+        }
+        val frameId = sanitizeFrameId(frames[0] as Node)
+        if (frameId >= 10) {
+            currentTime = frameId * 10
+        }
 
         val blocks = arrayListOf<TimelineBlock>()
         val frame0 = processedFrames[0]
@@ -163,8 +172,8 @@ class ConvertSVG() {
         var currentColor: String? = ""
         var nextFrameColor: String? = ""
 
-        var currentAlpha: Double? = 1.0
-        var nextFrameAlpha: Double? = 1.0
+        var currentAlpha: Number? = 1.0
+        var nextFrameAlpha: Number? = 1.0
         var colorProperty: TimelineProperty = TimelineProperty.FILL_COLOR
         var alphaProperty: TimelineProperty = TimelineProperty.FILL_ALPHA
 
@@ -175,7 +184,7 @@ class ConvertSVG() {
 
             if (currentPath != nextPath) {
                 val timelineBlock = TimelineBlock(
-                        id = UUID.randomUUID().toString(),
+                        id = UUID.randomUUID().toString().replace("-",""),
                         layerId = (frameFillOrStrokes.children[i] as Path).id,           // never changes
                         type = TimelineType.PATH.id,
                         fromValue = currentPath,   // changes per frame
@@ -212,7 +221,7 @@ class ConvertSVG() {
 
             if (currentColor != nextFrameColor) {
                 val colorTimelineBlock = TimelineBlock(
-                        id = UUID.randomUUID().toString(),
+                        id = UUID.randomUUID().toString().replace("-",""),
                         layerId = (frameFillOrStrokes.children[i] as Path).id,
                         type = TimelineType.COLOR.id,
                         propertyName = colorProperty.id,
@@ -226,7 +235,7 @@ class ConvertSVG() {
             }
             if (currentAlpha != nextFrameAlpha) {
                 val colorTimelineBlock = TimelineBlock(
-                        id = UUID.randomUUID().toString(),
+                        id = UUID.randomUUID().toString().replace("-",""),
                         layerId = (frameFillOrStrokes.children[i] as Path).id,
                         type = TimelineType.NUMBER.id,
                         propertyName = alphaProperty.id,
@@ -239,7 +248,7 @@ class ConvertSVG() {
                 blocks.add(colorTimelineBlock)
 
             }
-        } catch (ex:Exception) {
+        } catch (ex: Exception) {
             println(ex.message)
         }
     }
@@ -257,12 +266,13 @@ class ConvertSVG() {
             val nodeList = ((paths.get(0) as Node).value() as NodeList)
 
             nodeList.forEachIndexed { index, it ->
-                children.add(processPath(UUID.randomUUID().toString(), "$id-$index", (it as Node).attributes() as HashMap<String, String>))
+                children.add(processPath(UUID.randomUUID().toString().replace("-",""),
+                        "$id-$index", (it as Node).attributes() as HashMap<String, String>))
             }
         }
 
         val group = Group(
-                id = UUID.randomUUID().toString(),
+                id = UUID.randomUUID().toString().replace("-",""),
                 name = id,
                 children = children
         )
@@ -274,7 +284,7 @@ class ConvertSVG() {
     fun composeAnimation(svgHeight: Int, svgWidth: Int, drawingData: HashMap<String, Any>): String {
 
         val layer = Layer(
-                id = UUID.randomUUID().toString(),
+                id = UUID.randomUUID().toString().replace("-",""),
                 name = "vector",
                 width = svgWidth,
                 height = svgHeight,
@@ -299,7 +309,7 @@ class ConvertSVG() {
         groups.add(processPaths("strokes", renderLayer_LineSet))
 
         val layer = Layer(
-                id = UUID.randomUUID().toString(),
+                id = UUID.randomUUID().toString().replace("-",""),
                 name = "vector",
                 width = svgWidth,
                 height = svgHeight,
@@ -352,7 +362,8 @@ class ConvertSVG() {
         val fillType = props["fill_rule"]
         when (fillType) {
             null -> return null
-            "evenOdd", "evenodd" -> return FillType.EVEN_ODD.id
+            // Blender generates some non-compliant SVG
+            //"evenOdd", "evenodd" -> return FillType.EVEN_ODD.id
             "nonZero" -> return FillType.NON_ZERO.id
         }
         return null
