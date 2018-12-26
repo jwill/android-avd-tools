@@ -42,8 +42,8 @@ fun parseChildren(rawChildren:ArrayList<Map<*,*>>, childObjectList: ArrayList<Pa
 }
 
 class Group(
-        var id:String,
-        val name:String,
+        override var id:String,
+        override val name:String,
         //val rotation:Int = 0,
         //val scaleX:Double = 1.0,
         //val scaleY:Double = 1.0,
@@ -109,23 +109,25 @@ enum class FillType(val id:String) {
 }
 
 interface PathPrimitive {
+    var id:String
+    val name:String
     val type:String
 }
 
 data class Mask(
-        val id:String,
-        val name:String,
+        override var id:String,
+        override val name:String,
         val pathData: String,
 
         override val type: String = "mask"
 ) : PathPrimitive
 
 data class Path(
-        var id:String,
-        val name: String,
+        override var id:String,
+        override val name: String,
         val pathData: String?,
         val fillColor: String?,
-        val fillAlpha:Double?,
+        val fillAlpha:Number?,
 
         val strokeColor: String?,
         val strokeWidth: Number? ,
@@ -149,7 +151,7 @@ data class Path(
                     name = map["name"] as String,
                     pathData = map["pathData"] as String?,
                     fillColor = map["fillColor"] as String?,
-                    fillAlpha = map["fillAlpha"] as Double?,
+                    fillAlpha = map["fillAlpha"] as Number?,
 
                     strokeColor = map["strokeColor"] as String?,
                     strokeWidth = map["strokeWidth"] as Number?,
@@ -178,6 +180,7 @@ data class AnimationTimeline(
     fun fixDuration() {
         println("fixing duration")
         duration = blocks.map { it.endTime }.max()!!
+        println(blocks.size)
     }
 
     companion object {
@@ -200,7 +203,7 @@ data class AnimationTimeline(
 
 data class TimelineBlock(
         var id:String,               // could possibly be rando generated
-        val layerId: String,         // id of layer to modify
+        var layerId: String,         // id of layer to modify
         val propertyName: String,
         val startTime: Int = 0,
         val endTime: Int = 100,

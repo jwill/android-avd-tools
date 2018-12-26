@@ -13,7 +13,7 @@ fun main(args: Array<String>) {
     //ConvertSVG().renderFile("examples/example.svg")
 
     // Use from the commandline
-    MergeShapeShifter().merge(arrayOf("blue-plane-clean.shapeshifter", "red-circle-clean.shapeshifter"))
+    MergeShapeShifter().merge(arrayOf("tree-base.shapeshifter", "tree-lights.shapeshifter"), "tree-all.shapeshifter")
     //MergeShapeShifter().merge(args)
 
 }
@@ -24,15 +24,43 @@ class MergeShapeShifter() {
 
     var startId = 200
 
-    fun merge(filenames: Array<String>) {
-        val outputFile = File("combined-clean-55.shapeshifter")
+    fun findReferencedPaths(oldId:String, newId:String, list:ArrayList<TimelineBlock>) {
+        //println()
+        println("Changing refs from oldId ${oldId} to ${newId}")
+        val foundIds = list.filter { it.layerId == oldId }
+        foundIds.forEach { it.layerId = newId }
+    }
+
+    fun walkIds(child:PathPrimitive, timelineBlocks: ArrayList<TimelineBlock>) {
+        val oldId = child.id
+        child.id = nextId().toString()
+        when (child) {
+            is Group -> {
+                findReferencedPaths(oldId, child.id, timelineBlocks)
+                if (child.children.isNotEmpty()) {
+                    child.children.forEach { walkIds(it, timelineBlocks) }
+                }
+            }
+            is Path -> {
+                println(child.id)
+                findReferencedPaths(oldId, child.id, timelineBlocks)
+            }
+        }
+
+    }
+
+    fun merge(filenames: Array<String>, outFile:String) {
+        val outputFile = File(outFile)
 
         val groups = arrayListOf<Group>()
-        val animationBlocks = arrayListOf<Any>()
+        val animationBlocks = arrayListOf<TimelineBlock>()
         // Create skeleton file
         var width: Int = -1
         var height: Int = -1
         var duration: Int = -1
+
+        val pathIdMap = mapOf<String, String>()
+
         for (i in filenames) {
             val file = File(i)
             val f = JsonSlurper().parse(file)
@@ -40,11 +68,14 @@ class MergeShapeShifter() {
             val layers = json["layers"] as Map<Any, Any>
             // parse vector layer
             val vectorLayer = Layer.parse(layers["vectorLayer"] as Map<Any, Any>)
+            vectorLayer.id = nextId().toString()
 
             if (width == -1) {
                 width = vectorLayer.width
                 height = vectorLayer.height
             }
+
+
 
 
             // Use filename as group name
@@ -70,14 +101,26 @@ class MergeShapeShifter() {
             val timeline = json["timeline"] as Map<*, *>
             val animation = AnimationTimeline.parse(timeline["animation"] as Map<*, *>)
 
+
+
             animationBlocks.addAll(animation.blocks)
 
+            // for each group
+            // check timeline events for that original id
+            // update group id and layerId in each timeline event
+            // if group has children do the same
+            for (child: PathPrimitive in vectorLayer.children) {
+                //walkIds(child,animation.blocks as ArrayList<TimelineBlock>)
+            }
         }
 
         // walk tree and reassign ids
+       // for (i in animationBlocks) {
+       //     i.id = nextId().toString()
+       // }
 
         val layer = Layer(
-                id = UUID.randomUUID().toString(),
+                id = nextId().toString(),
                 name = "vector",
                 width = width,
                 height = height,
@@ -85,7 +128,7 @@ class MergeShapeShifter() {
         )
 
         val animationTimeline = AnimationTimeline(
-                id = "45",      // Dummy id --- probably need to fix this later
+                id = nextId().toString(),      // Dummy id --- probably need to fix this later
                 duration = duration,
                 blocks = animationBlocks as List<TimelineBlock>
         )
@@ -94,7 +137,7 @@ class MergeShapeShifter() {
         val jsonObject = mapOf(
                 "version" to 1,
                 "generatedby" to "GH:/jwill/android-avd-tools",
-                "layers" to layer,
+                "layers" to layersToJSON(layer),
                 timelineToJSON(animationTimeline)
         )
 
@@ -141,6 +184,12 @@ class MergeShapeShifter() {
         } else {
             //renderFile(cmd.getOptionValue("file"))
         }
+    }
+
+    fun layersToJSON(layer: Layer): Map<Any, Any> {
+        return mapOf(
+                "vectorLayer" to layer
+        )
     }
 
     // Dupe from ConvertSVG
