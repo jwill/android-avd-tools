@@ -9,7 +9,7 @@ Creating animations isn't the simplest endeavour. In the mobile space, several m
 
 - Developer re-implements / hand codes what the designer has given them
 - Developer uses Shape Shifter to design the animation
-- Designer adds [[https://airbnb.design/lottie/][Lottie]] to their workflow and developer uses the generated assets
+- Designer adds [Lottie](https://airbnb.design/lottie/) to their workflow and developer uses the generated assets
 
 No one should code AVDs so let's remove that as non-viable. Lottie, requiring After Effects which doesn't run on Linux, was also knocked out of my choices.
 
@@ -76,8 +76,9 @@ Fixed block size: 20
 Completed SVG to .shapeshifter.
 ```
 
-The 0001-0030.shapeshifter file can be opened in the Shape Shifter website here: [[https://shapeshifter.design/]]
+The 0001-0030.shapeshifter file can be opened in the Shape Shifter website here: (https://shapeshifter.design/)
 
+```
 | Property                     | Description                               |
 | -f,--file <arg>              | File to convert                           |
 | -frame,--frameInterval <arg> | Sets the number of frames to skip between |
@@ -87,5 +88,6 @@ The 0001-0030.shapeshifter file can be opened in the Shape Shifter website here:
 | -time,--timeInterval <arg>   | Sets the time interval between keyframes  |
 |                              | for animations [in milliseconds]          |
 |                              | Default: 50                               |
+```
 
 Output filename is always the input filename with a ~.shapeshifter~ extension.
