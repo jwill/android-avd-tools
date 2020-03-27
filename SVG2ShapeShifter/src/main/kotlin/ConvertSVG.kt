@@ -12,10 +12,10 @@ import kotlin.collections.ArrayList
 
 fun main(args: Array<String>) {
     // Call the converter from IDEA
-    //ConvertSVG().renderFile("examples/example.svg")
-
+    println("Hello World!")
+    ConvertSVG().renderFile("examples/0001-0030.svg")
     // Use from the commandline
-    ConvertSVG(args)
+    //ConvertSVG(args)
 }
 
 class ConvertSVG() {
