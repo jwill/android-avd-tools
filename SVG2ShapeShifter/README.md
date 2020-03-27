@@ -21,9 +21,9 @@ With that solved, it cut down my time needed manually create paths in Shape Shif
 
 
 ## Examples
-[[./art/blender-hello-1280.gif]]
+[[file:art/blender-hello-1280.gif]]
 
-[[./art/shapeshifter-hello-1280.gif]]
+[[file:art/shapeshifter-hello-1280.gif]]
 
 
 ## How does it work ?
