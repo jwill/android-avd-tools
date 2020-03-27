@@ -58,7 +58,24 @@ This is very experimental. Moving the camera in your scene can cause some paths 
 Usage:
 =SVG2ShapeShifter<.bat/sh> <options>=
 
-=java -jar SVG2ShapeShifter-1.0-SNAPSHOT.jar=
+The dist/ folder has a current build that can be useful for testing.
+
+You can run it directly from the command line with this command:
+
+=java -jar dist\SVG2ShapeShifter-1.0-SNAPSHOT.jar -f examples\0001-0030.svg=
+
+It should output something like this:
+
+```
+Starting SVG to .shapeshifter conversion...
+Converting file: examples\0001-0030.svg
+Write to converted file: 0001-0030.shapeshifter
+Fixing animation timeline duration: 20
+Fixed block size: 20
+Completed SVG to .shapeshifter.
+```
+
+That file can be opened in the Shape Shifter website here: https://shapeshifter.design/
 
 | Property                     | Description                               |
 | -f,--file <arg>              | File to convert                           |
