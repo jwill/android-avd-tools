@@ -1,7 +1,7 @@
 
 # SVG2ShapeShifter
 
-SVG2ShapeShifter is a command-line tool that converts SVG and animated SVG files created by the 3D modeling application [[http://blender.org][Blender]] to [[https://alexjlockwood.github.io/ShapeShifter/][Shape Shifter]] format.
+SVG2ShapeShifter is a command-line tool that converts SVG and animated SVG files created by the 3D modeling application [Blender](http://blender.org) to [Shape Shifter](https://alexjlockwood.github.io/ShapeShifter/) format.
 
 ## Problem
 
@@ -17,7 +17,7 @@ Shape Shifter is great in simplifying the steps to get to a working animation fo
 
 Blender speaks SVG and so does ShapeShifter so you can create in Blender and export to SVG, easy peasy. Blender's SVG is slightly incompatible so problem one was converting Blender's SVG to an easier format. Though not documented, I found native Shape Shifter easy to write a generator for.
 
-With that solved, it cut down my time needed manually create paths in Shape Shifter. I only needed to animate them. [[https://medium.com/@ecspike/creating-animatedvectordrawables-with-shape-shifter-part-ii-4142ba1ad74b][A simple eye blink animation]] took 10 timeline events to create in Shape Shifter. Doable but tedious as animations grow more complex. That exposed problem two. The number of timeline events needed to create something manually in Shape Shifter often increases greater than linear scale and pretty hard to adjust if one change had to cascade. The second major revision was parsing an animated SVG from Blender into ShapeShifter format.
+With that solved, it cut down my time needed manually create paths in Shape Shifter. I only needed to animate them. [A simple eye blink animation](https://medium.com/@ecspike/creating-animatedvectordrawables-with-shape-shifter-part-ii-4142ba1ad74b) took 10 timeline events to create in Shape Shifter. Doable but tedious as animations grow more complex. That exposed problem two. The number of timeline events needed to create something manually in Shape Shifter often increases greater than linear scale and pretty hard to adjust if one change had to cascade. The second major revision was parsing an animated SVG from Blender into ShapeShifter format.
 
 
 ## Examples
@@ -50,7 +50,7 @@ This is very experimental. Moving the camera in your scene can cause some paths 
 ## Requirements
 
 - Java 8
-- Blender. Follow this [[https://][guide]] to install and setup the required plugins for export.
+- Blender. Follow this [Guide](https://docs.blender.org/manual/en/2.79/render/freestyle/export_svg.html) to install and setup the required SVG plugins for export.
 
 
 ## Usage
