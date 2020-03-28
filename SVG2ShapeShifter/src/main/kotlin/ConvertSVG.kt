@@ -12,10 +12,11 @@ import kotlin.collections.ArrayList
 
 fun main(args: Array<String>) {
     // Call the converter from IDEA
-    //ConvertSVG().renderFile("examples/example.svg")
-
+    println("Starting SVG to .shapeshifter conversion...")
+    //ConvertSVG().renderFile("examples/0001-0030.svg")
     // Use from the commandline
     ConvertSVG(args)
+    println("Completed SVG to .shapeshifter.")
 }
 
 class ConvertSVG() {
@@ -49,6 +50,7 @@ class ConvertSVG() {
             println("You need to specify a file.")
             formatter.printHelp("SVG2ShapeShifter", options)
         } else {
+            println("Converting file: "+ cmd.getOptionValue("file"))
             renderFile(cmd.getOptionValue("file"))
         }
     }
@@ -63,6 +65,7 @@ class ConvertSVG() {
             println("File ${file.name} doesn't exist")
             System.exit(1)
         }
+        println("Write to converted file: "+ outputFile)
 
         val svg = XmlParser().parse(file)
 
